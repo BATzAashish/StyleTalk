@@ -30,10 +30,10 @@ const InputSection = ({
   onTargetLanguageChange,
 }: InputSectionProps) => {
   return (
-    <Card className="shadow-medium">
+    <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
-        <CardTitle>Your Message</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-white">Your Message</CardTitle>
+        <CardDescription className="text-gray-400">
           Type or paste your message and select the features you want to apply
         </CardDescription>
       </CardHeader>
@@ -42,16 +42,16 @@ const InputSection = ({
           placeholder="Start typing your message here..."
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
-          className="min-h-[200px] resize-none"
+          className="min-h-[200px] resize-none bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
         />
 
-        <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-          <h3 className="text-sm font-semibold">Processing Features</h3>
+        <div className="space-y-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <h3 className="text-sm font-semibold text-white">Processing Features</h3>
           
           <div className="flex items-center justify-between">
             <Label htmlFor="grammar" className="cursor-pointer">
-              <div className="font-medium">Grammar Correction</div>
-              <div className="text-xs text-muted-foreground">Fix grammar and spelling errors</div>
+              <div className="font-medium text-white">Grammar Correction</div>
+              <div className="text-xs text-gray-400">Fix grammar and spelling errors</div>
             </Label>
             <Switch
               id="grammar"
@@ -62,8 +62,8 @@ const InputSection = ({
 
           <div className="flex items-center justify-between">
             <Label htmlFor="rephrasing" className="cursor-pointer">
-              <div className="font-medium">Sentence Rephrasing</div>
-              <div className="text-xs text-muted-foreground">Generate concise, expanded & paraphrased versions</div>
+              <div className="font-medium text-white">Sentence Rephrasing</div>
+              <div className="text-xs text-gray-400">Generate concise, expanded & paraphrased versions</div>
             </Label>
             <Switch
               id="rephrasing"
@@ -75,8 +75,8 @@ const InputSection = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="translation" className="cursor-pointer">
-                <div className="font-medium">Translation</div>
-                <div className="text-xs text-muted-foreground">Translate to another language</div>
+                <div className="font-medium text-white">Translation</div>
+                <div className="text-xs text-gray-400">Translate to another language</div>
               </Label>
               <Switch
                 id="translation"
@@ -86,18 +86,18 @@ const InputSection = ({
             </div>
             {translation && (
               <Select value={targetLanguage} onValueChange={onTargetLanguageChange}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select target language" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="es">Spanish</SelectItem>
-                  <SelectItem value="fr">French</SelectItem>
-                  <SelectItem value="de">German</SelectItem>
-                  <SelectItem value="it">Italian</SelectItem>
-                  <SelectItem value="pt">Portuguese</SelectItem>
-                  <SelectItem value="ja">Japanese</SelectItem>
-                  <SelectItem value="ko">Korean</SelectItem>
-                  <SelectItem value="zh">Chinese</SelectItem>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="es" className="text-white hover:bg-gray-700">Spanish</SelectItem>
+                  <SelectItem value="fr" className="text-white hover:bg-gray-700">French</SelectItem>
+                  <SelectItem value="de" className="text-white hover:bg-gray-700">German</SelectItem>
+                  <SelectItem value="it" className="text-white hover:bg-gray-700">Italian</SelectItem>
+                  <SelectItem value="pt" className="text-white hover:bg-gray-700">Portuguese</SelectItem>
+                  <SelectItem value="ja" className="text-white hover:bg-gray-700">Japanese</SelectItem>
+                  <SelectItem value="ko" className="text-white hover:bg-gray-700">Korean</SelectItem>
+                  <SelectItem value="zh" className="text-white hover:bg-gray-700">Chinese</SelectItem>
                 </SelectContent>
               </Select>
             )}

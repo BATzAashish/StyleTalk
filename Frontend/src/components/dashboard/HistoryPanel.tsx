@@ -18,11 +18,11 @@ interface HistoryPanelProps {
 
 const HistoryPanel = ({ history, onSelectHistory, onClearHistory }: HistoryPanelProps) => {
   return (
-    <Card className="shadow-soft">
+    <Card className="bg-gray-900 border-gray-800">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <History className="w-5 h-5" />
+          <CardTitle className="text-lg flex items-center gap-2 text-white">
+            <History className="w-5 h-5 text-purple-500" />
             Recent History
           </CardTitle>
           {history.length > 0 && (
@@ -30,7 +30,7 @@ const HistoryPanel = ({ history, onSelectHistory, onClearHistory }: HistoryPanel
               variant="ghost"
               size="sm"
               onClick={onClearHistory}
-              className="text-muted-foreground"
+              className="text-gray-400 hover:text-white hover:bg-gray-800"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -39,7 +39,7 @@ const HistoryPanel = ({ history, onSelectHistory, onClearHistory }: HistoryPanel
       </CardHeader>
       <CardContent>
         {history.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
+          <p className="text-sm text-gray-400 text-center py-4">
             No history yet. Start generating responses!
           </p>
         ) : (
@@ -49,10 +49,10 @@ const HistoryPanel = ({ history, onSelectHistory, onClearHistory }: HistoryPanel
                 <button
                   key={item.id}
                   onClick={() => onSelectHistory(item)}
-                  className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors border border-border"
+                  className="w-full text-left p-3 rounded-lg hover:bg-gray-800 transition-colors border border-gray-700 bg-gray-900/50"
                 >
-                  <p className="text-sm line-clamp-2 mb-1">{item.input}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <p className="text-sm line-clamp-2 mb-1 text-white">{item.input}</p>
+                  <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>{item.chosenStyle}</span>
                     <span>{item.timestamp.toLocaleDateString()}</span>
                   </div>

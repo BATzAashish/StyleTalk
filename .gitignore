@@ -1,0 +1,21 @@
+
+# Node modules
+Frontend/node_modules/
+
+# Python virtual environment
+Backend/venv/
+Backend/__pycache__/
+Backend/*.pyc
+
+# Environment variables
+Backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
