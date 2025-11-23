@@ -1,13 +1,94 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Chrome, Download, CheckCircle2, Zap, Shield, Globe, MessageSquare, Brain, Puzzle } from "lucide-react";
+import { Chrome, Download, CheckCircle2, Zap, Shield, Globe, MessageSquare, Brain, Puzzle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useState, useEffect } from "react";
+
+interface PluginInfo {
+  name: string;
+  version: string;
+  description: string;
+  features: string[];
+  supported_browsers: string[];
+  platforms: string[];
+  size: string;
+  download_url: string;
+  install_guide_url: string;
+}
+
+interface InstallationGuide {
+  chrome: {
+    steps: string[];
+    troubleshooting: Array<{ issue: string; solution: string }>;
+  };
+  edge: {
+    steps: string[];
+  };
+  general_tips: string[];
+}
 
 const Plugin = () => {
-  const handleDownload = (browser: string) => {
-    toast.info(`${browser} extension coming soon! We're working hard to bring StyleTalk to your browser.`);
+  const [pluginInfo, setPluginInfo] = useState<PluginInfo | null>(null);
+  const [installGuide, setInstallGuide] = useState<InstallationGuide | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPluginInfo();
+    fetchInstallGuide();
+  }, []);
+
+  const fetchPluginInfo = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/plugin/info');
+      const data = await response.json();
+      setPluginInfo(data);
+    } catch (error) {
+      console.error('Failed to fetch plugin info:', error);
+      toast.error('Failed to load plugin information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInstallGuide = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/plugin/guide');
+      const data = await response.json();
+      setInstallGuide(data);
+    } catch (error) {
+      console.error('Failed to fetch install guide:', error);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      toast.info('Preparing download...');
+      
+      // Create download link
+      const downloadUrl = 'http://localhost:5000/api/plugin/download';
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'styletalk-extension-v1.0.0.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Download started! Follow the installation guide below.');
+      
+      // Scroll to installation guide
+      setTimeout(() => {
+        document.getElementById('install-guide')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download extension');
+    }
+  };
+
+  const handleViewGuide = () => {
+    document.getElementById('install-guide')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -40,59 +121,64 @@ const Plugin = () => {
             </p>
           </div>
 
-          {/* Download Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
-            <Card className="hover:shadow-lg transition-shadow bg-gray-900 border-gray-800">
-              <CardHeader className="text-center">
-                <Chrome className="w-12 h-12 text-blue-500 mx-auto mb-2" />
-                <CardTitle className="text-white">Chrome</CardTitle>
-                <CardDescription className="text-gray-400">Most popular browser</CardDescription>
+          {/* Download Section */}
+          <div className="mb-16">
+            <Card className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border-purple-500 hover:shadow-2xl transition-shadow">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-3xl text-white mb-2">
+                  Download StyleTalk Extension
+                </CardTitle>
+                <CardDescription className="text-gray-300 text-lg">
+                  {loading ? 'Loading...' : `${pluginInfo?.name} v${pluginInfo?.version} • ${pluginInfo?.size}`}
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700" 
-                  onClick={() => handleDownload("Chrome")}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow bg-gray-900 border-gray-800">
-              <CardHeader className="text-center">
-                <Globe className="w-12 h-12 text-orange-500 mx-auto mb-2" />
-                <CardTitle className="text-white">Firefox</CardTitle>
-                <CardDescription className="text-gray-400">Privacy-focused</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full bg-orange-600 hover:bg-orange-700" 
-                  onClick={() => handleDownload("Firefox")}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow bg-gray-900 border-gray-800">
-              <CardHeader className="text-center">
-                <Chrome className="w-12 h-12 text-teal-500 mx-auto mb-2" />
-                <CardTitle className="text-white">Edge</CardTitle>
-                <CardDescription className="text-gray-400">Microsoft browser</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full bg-teal-600 hover:bg-teal-700" 
-                  onClick={() => handleDownload("Edge")}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
+              <CardContent className="space-y-6">
+                <div className="text-center">
+                  <Button 
+                    size="lg"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-6 text-lg font-semibold"
+                    onClick={handleDownload}
+                    disabled={loading}
+                  >
+                    <Download className="w-6 h-6 mr-3" />
+                    Download for Chrome, Edge & Brave
+                  </Button>
+                  <p className="text-gray-400 text-sm mt-3">
+                    Works on Chrome, Edge, Brave, and Opera
+                  </p>
+                </div>
+                
+                <div className="flex justify-center gap-4 pt-4">
+                  <Button 
+                    variant="outline" 
+                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                    onClick={handleViewGuide}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Installation Guide
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Supported Browsers */}
+          {pluginInfo && (
+            <div className="grid md:grid-cols-4 gap-4 mb-16">
+              {pluginInfo.supported_browsers.map((browser) => (
+                <Card key={browser} className="bg-gray-900 border-gray-800 text-center">
+                  <CardContent className="pt-6">
+                    <Chrome className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                    <p className="text-white font-medium">{browser}</p>
+                    <Badge variant="secondary" className="mt-2 bg-green-900/50 text-green-300">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Supported
+                    </Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Features Grid */}
           <div className="mb-16">
@@ -208,6 +294,61 @@ const Plugin = () => {
             </div>
           </div>
 
+          {/* Installation Guide */}
+          <div id="install-guide" className="mb-16">
+            <h2 className="text-3xl font-bold text-center mb-8 text-white">Installation Guide</h2>
+            {installGuide && (
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Chrome Guide */}
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader>
+                    <Chrome className="w-8 h-8 text-blue-500 mb-2" />
+                    <CardTitle className="text-white">Chrome / Edge / Brave</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ol className="list-decimal list-inside space-y-2 text-gray-300">
+                      {installGuide.chrome.steps.map((step, index) => (
+                        <li key={index} className="text-sm">{step}</li>
+                      ))}
+                    </ol>
+                    
+                    {installGuide.chrome.troubleshooting && (
+                      <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+                        <h4 className="text-sm font-semibold text-white mb-2">Troubleshooting</h4>
+                        <div className="space-y-2">
+                          {installGuide.chrome.troubleshooting.map((item, index) => (
+                            <div key={index} className="text-xs">
+                              <span className="text-red-400 font-medium">{item.issue}:</span>
+                              <span className="text-gray-400"> {item.solution}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* General Tips */}
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader>
+                    <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
+                    <CardTitle className="text-white">Pro Tips</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 text-gray-300">
+                      {installGuide.general_tips.map((tip, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+
           {/* CTA Section */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-12 text-center text-white">
             <h2 className="text-3xl font-bold mb-4">
@@ -220,7 +361,7 @@ const Plugin = () => {
               <Button 
                 size="lg"
                 className="bg-white text-purple-600 hover:bg-gray-100"
-                onClick={() => handleDownload("Chrome")}
+                onClick={handleDownload}
               >
                 <Download className="w-5 h-5 mr-2" />
                 Download Now

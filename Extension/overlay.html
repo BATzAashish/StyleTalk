@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleTalk Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* ==================== HEADER ==================== */
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 20px;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+
+    /* ==================== CONTENT ==================== */
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ==================== INPUT SECTION ==================== */
+
+    .input-section {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .input-section label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .input-section textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .input-section textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* ==================== TONE SELECTION ==================== */
+
+    .tone-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tone-section label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .tone-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .tone-btn {
+      background: white;
+      border: 2px solid #e0e0e0;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tone-btn:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .tone-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    /* ==================== ACTION BUTTONS ==================== */
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .action-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .action-btn.secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .action-btn.secondary:hover {
+      background: #f0f4ff;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ==================== RESULTS ==================== */
+
+    .results-section {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .results-section.visible {
+      display: flex;
+    }
+
+    .result-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s;
+    }
+
+    .result-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+    }
+
+    .result-card h3 {
+      font-size: 16px;
+      color: #667eea;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-card p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .result-actions button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-insert {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-insert:hover {
+      background: #5568d3;
+    }
+
+    .btn-copy {
+      background: #f0f4ff;
+      color: #667eea;
+    }
+
+    .btn-copy:hover {
+      background: #e0e8ff;
+    }
+
+    /* ==================== LOADING ==================== */
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.visible {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* ==================== SCROLLBAR ==================== */
+
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 4px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover {
+      background: #5568d3;
+    }
+
+    /* ==================== EMPTY STATE ==================== */
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>
+        <span>✨</span>
+        StyleTalk Assistant
+      </h1>
+      <button class="close-btn" id="closeBtn" title="Close (Esc)">×</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Input Section -->
+      <div class="input-section">
+        <label for="inputText">Your Text</label>
+        <textarea 
+          id="inputText" 
+          placeholder="Type or paste your message here..."
+        ></textarea>
+      </div>
+
+      <!-- Tone Selection -->
+      <div class="tone-section">
+        <label>Quick Tone Shift</label>
+        <div class="tone-grid">
+          <button class="tone-btn" data-tone="formal">
+            <span>✨</span> Formal
+          </button>
+          <button class="tone-btn" data-tone="casual">
+            <span>😊</span> Casual
+          </button>
+          <button class="tone-btn" data-tone="professional">
+            <span>💼</span> Professional
+          </button>
+          <button class="tone-btn" data-tone="friendly">
+            <span>🤗</span> Friendly
+          </button>
+          <button class="tone-btn" data-tone="genz">
+            <span>🔥</span> Gen-Z
+          </button>
+          <button class="tone-btn" data-tone="romantic">
+            <span>💕</span> Romantic
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="action-btn primary" id="enhanceBtn">
+          <span>🎯</span> Full Enhancement
+        </button>
+        <button class="action-btn secondary" id="grammarBtn">
+          <span>📝</span> Grammar Only
+        </button>
+        <button class="action-btn secondary" id="emojiBtn">
+          <span>😀</span> Add Emojis
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Processing your text...</p>
+      </div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="results">
+        <!-- Results will be dynamically inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>

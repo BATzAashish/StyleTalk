@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Copy, ThumbsUp, Download } from "lucide-react";
+import { Trash2, Copy, ThumbsUp, Download, Save, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { getPreferences, savePreferences, resetPreferences, UserPreferences, getHistory, toggleFavorite as toggleFavoriteLocal, clearHistory as clearHistoryLocal } from "@/lib/storage";
+import { userAPI } from "@/lib/api";
 
 interface HistoryItem {
   id: number;
@@ -20,47 +22,109 @@ interface HistoryItem {
 }
 
 const Preferences = () => {
-  const [autoDetect, setAutoDetect] = useState(true);
-  const [showEmojis, setShowEmojis] = useState(true);
-  const [showGifs, setShowGifs] = useState(true);
-  const [privacyMode, setPrivacyMode] = useState(false);
-  const [defaultStyle, setDefaultStyle] = useState("auto");
-  const [defaultLanguage, setDefaultLanguage] = useState("en");
-
-  // Mock history data
-  const [history, setHistory] = useState<HistoryItem[]>([
-    {
-      id: 1,
-      input: "Thanks for the meeting invitation!",
-      output: "Thank you so much for inviting me to the meeting! I truly appreciate the opportunity to contribute.",
-      style: "Formal",
-      timestamp: "2024-03-15 10:30 AM",
-      liked: true,
-    },
-    {
-      id: 2,
-      input: "Let's catch up soon",
-      output: "Yo! We should totally hang out soon, it's been forever! 🎉",
-      style: "Gen-Z",
-      timestamp: "2024-03-14 03:15 PM",
-      liked: false,
-    },
-    {
-      id: 3,
-      input: "Can we reschedule?",
-      output: "Hi! Would it be possible to reschedule our meeting? I understand if this is inconvenient.",
-      style: "Polite",
-      timestamp: "2024-03-13 09:00 AM",
-      liked: true,
-    },
-  ]);
-
-  const handleSavePreferences = () => {
-    toast.success("Preferences saved successfully!");
+  const [preferences, setPreferencesState] = useState<UserPreferences>(getPreferences());
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Extract individual settings from preferences
+  const autoDetect = preferences.enable_cache;
+  const showEmojis = preferences.enable_emojis;
+  const showGifs = preferences.enable_gifs;
+  const privacyMode = preferences.privacy_mode === 'local';
+  const defaultStyle = preferences.default_tone;
+  const defaultLanguage = preferences.default_language;
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    setIsAuthenticated(!!token);
+    
+    // Load preferences from API if authenticated
+    if (token) {
+      loadPreferencesFromAPI();
+    }
+  }, []);
+  
+  const loadPreferencesFromAPI = async () => {
+    try {
+      const response = await userAPI.getPreferences();
+      if (response.success && response.preferences) {
+        setPreferencesState(response.preferences);
+        savePreferences(response.preferences); // Sync to localStorage
+      }
+    } catch (error) {
+      console.error('Failed to load preferences from API:', error);
+    }
+  };
+  
+  const handleSavePreferences = async () => {
+    setIsSaving(true);
+    try {
+      // Save to localStorage
+      savePreferences(preferences);
+      
+      // If authenticated, also save to API
+      if (isAuthenticated) {
+        await userAPI.updatePreferences(preferences);
+        toast.success('✅ Preferences saved to cloud!');
+      } else {
+        toast.success('✅ Preferences saved locally!');
+      }
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      toast.error('Failed to save preferences');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleResetPreferences = async () => {
+    try {
+      resetPreferences();
+      setPreferencesState(getPreferences());
+      
+      if (isAuthenticated) {
+        await userAPI.resetPreferences();
+        toast.success('🔄 Preferences reset to defaults!');
+      } else {
+        toast.success('🔄 Preferences reset!');
+      }
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      toast.error('Failed to reset preferences');
+    }
+  };
+  
+  const updatePreference = (key: keyof UserPreferences, value: any) => {
+    const updated = { ...preferences, [key]: value };
+    setPreferencesState(updated);
+    savePreferences(updated); // Auto-save to localStorage
   };
 
-  const handleClearHistory = () => {
-    toast.success("History cleared!");
+  // Load history from localStorage
+  const [history, setHistory] = useState<any[]>([]);
+  
+  useEffect(() => {
+    loadHistory();
+  }, []);
+  
+  const loadHistory = () => {
+    const stored = getHistory();
+    setHistory(stored);
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      clearHistoryLocal(true); // Keep favorites
+      loadHistory();
+      
+      if (isAuthenticated) {
+        await userAPI.clearHistory(true);
+      }
+      toast.success("History cleared (favorites kept)!");
+    } catch (error) {
+      toast.error("Failed to clear history");
+    }
   };
 
   const handleCopyHistoryItem = (output: string) => {
@@ -68,8 +132,29 @@ const Preferences = () => {
     toast.success("Copied to clipboard!");
   };
 
+  const handleToggleFavorite = async (id: string) => {
+    try {
+      toggleFavoriteLocal(id);
+      loadHistory();
+      
+      if (isAuthenticated) {
+        await userAPI.toggleFavorite(id);
+      }
+      toast.success("Favorite toggled!");
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
+
   const handleExportHistory = () => {
-    toast.info("Export feature coming soon!");
+    const data = JSON.stringify({ preferences, history }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `styletalk-data-${new Date().toISOString()}.json`;
+    a.click();
+    toast.success("Data exported!");
   };
 
   return (
@@ -80,7 +165,27 @@ const Preferences = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-white">Settings & History</h1>
-                <p className="text-sm text-gray-400 mt-1">Manage your preferences and view conversation history</p>
+                <p className="text-sm text-gray-400 mt-1">
+                  {isAuthenticated ? '☁️ Synced with cloud' : '💾 Saved locally (login to sync)'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResetPreferences}
+                  className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset
+                </Button>
+                <Button
+                  onClick={handleSavePreferences}
+                  disabled={isSaving}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
               </div>
             </div>
           </div>
@@ -112,7 +217,7 @@ const Preferences = () => {
                     <Switch
                       id="auto-detect"
                       checked={autoDetect}
-                      onCheckedChange={setAutoDetect}
+                      onCheckedChange={(checked) => updatePreference('enable_cache', checked)}
                     />
                   </div>
 
@@ -126,7 +231,7 @@ const Preferences = () => {
                     <Switch
                       id="show-emojis"
                       checked={showEmojis}
-                      onCheckedChange={setShowEmojis}
+                      onCheckedChange={(checked) => updatePreference('enable_emojis', checked)}
                     />
                   </div>
 
@@ -140,7 +245,7 @@ const Preferences = () => {
                     <Switch
                       id="show-gifs"
                       checked={showGifs}
-                      onCheckedChange={setShowGifs}
+                      onCheckedChange={(checked) => updatePreference('enable_gifs', checked)}
                     />
                   </div>
 
@@ -154,7 +259,7 @@ const Preferences = () => {
                     <Switch
                       id="privacy-mode"
                       checked={privacyMode}
-                      onCheckedChange={setPrivacyMode}
+                      onCheckedChange={(checked) => updatePreference('privacy_mode', checked ? 'local' : 'cloud')}
                     />
                   </div>
                 </CardContent>
@@ -170,24 +275,25 @@ const Preferences = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="default-style" className="text-white">Default Tone Style</Label>
-                    <Select value={defaultStyle} onValueChange={setDefaultStyle}>
+                    <Select value={defaultStyle} onValueChange={(value) => updatePreference('default_tone', value)}>
                       <SelectTrigger id="default-style" className="bg-gray-800 border-gray-700 text-white">
                         <SelectValue placeholder="Select default style" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
                         <SelectItem value="auto" className="text-white hover:bg-gray-700">Auto-detect</SelectItem>
+                        <SelectItem value="neutral" className="text-white hover:bg-gray-700">Neutral</SelectItem>
                         <SelectItem value="formal" className="text-white hover:bg-gray-700">Formal</SelectItem>
-                        <SelectItem value="polite" className="text-white hover:bg-gray-700">Polite</SelectItem>
+                        <SelectItem value="professional" className="text-white hover:bg-gray-700">Professional</SelectItem>
                         <SelectItem value="casual" className="text-white hover:bg-gray-700">Casual</SelectItem>
+                        <SelectItem value="friendly" className="text-white hover:bg-gray-700">Friendly</SelectItem>
                         <SelectItem value="genz" className="text-white hover:bg-gray-700">Gen-Z</SelectItem>
-                        <SelectItem value="friends" className="text-white hover:bg-gray-700">Friends</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="default-language" className="text-white">Default Language</Label>
-                    <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
+                    <Select value={defaultLanguage} onValueChange={(value) => updatePreference('default_language', value)}>
                       <SelectTrigger id="default-language" className="bg-gray-800 border-gray-700 text-white">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
@@ -196,8 +302,11 @@ const Preferences = () => {
                         <SelectItem value="es" className="text-white hover:bg-gray-700">Spanish</SelectItem>
                         <SelectItem value="fr" className="text-white hover:bg-gray-700">French</SelectItem>
                         <SelectItem value="de" className="text-white hover:bg-gray-700">German</SelectItem>
+                        <SelectItem value="it" className="text-white hover:bg-gray-700">Italian</SelectItem>
+                        <SelectItem value="pt" className="text-white hover:bg-gray-700">Portuguese</SelectItem>
                         <SelectItem value="ja" className="text-white hover:bg-gray-700">Japanese</SelectItem>
                         <SelectItem value="zh" className="text-white hover:bg-gray-700">Chinese</SelectItem>
+                        <SelectItem value="ko" className="text-white hover:bg-gray-700">Korean</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -1,13 +1,16 @@
-"""
-Run script for the Flask application
-"""
 import os
-from app import app
-from config import config
+from app import create_app
+
+app = create_app()
 
 if __name__ == '__main__':
-    env = os.environ.get('FLASK_ENV', 'development')
-    app.config.from_object(config.get(env, config['default']))
-    
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.getenv('PORT', 5000))
+    # Enhanced development server settings
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=True,
+        use_reloader=True,  # Enable auto-reloader
+        extra_files=None,   # Watch all Python files
+        threaded=True       # Handle multiple requests
+    )

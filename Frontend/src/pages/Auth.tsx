@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
+import { authAPI } from "@/lib/api";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,47 +17,46 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
 
-    // Simulate auth - will integrate with Lovable Cloud later
-    setTimeout(() => {
-      if (email && password) {
-        toast.success("Welcome back!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Please fill in all fields");
-      }
+      const response = await authAPI.login({ email, password });
+      toast.success(response.message || "Welcome back!");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Sign in failed. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const confirmPassword = formData.get("confirmPassword") as string;
+      const name = formData.get("name") as string;
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
-      setIsLoading(false);
-      return;
-    }
-
-    // Simulate auth - will integrate with Lovable Cloud later
-    setTimeout(() => {
-      if (email && password) {
-        toast.success("Account created! Let's set up your profile.");
-        navigate("/onboarding");
-      } else {
-        toast.error("Please fill in all fields");
+      if (password !== confirmPassword) {
+        toast.error("Passwords don't match");
+        setIsLoading(false);
+        return;
       }
+
+      const response = await authAPI.register({ email, password, name });
+      toast.success(response.message || "Account created! Let's set up your profile.");
+      navigate("/onboarding");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Sign up failed. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -116,6 +116,17 @@ const Auth = () => {
 
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-gray-300">Name</Label>
+                    <Input
+                      id="signup-name"
+                      name="name"
+                      type="text"
+                      placeholder="John Doe"
+                      required
+                      className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email" className="text-gray-300">Email</Label>
                     <Input

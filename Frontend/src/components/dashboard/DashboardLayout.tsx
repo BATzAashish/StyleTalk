@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Sparkles, 
   MessageSquare, 
@@ -14,6 +14,7 @@ import {
 import { motion } from "framer-motion";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { authAPI } from "@/lib/api";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [userName, setUserName] = useState("User");
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const user = authAPI.getStoredUser();
+    if (user) {
+      setUserName(user.name || "User");
+      setUserEmail(user.email || "");
+    } else {
+      // If no user data, redirect to login
+      navigate("/auth");
+    }
+  }, [navigate]);
 
   const links = [
     {
@@ -53,6 +68,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   ];
 
   const handleLogout = () => {
+    authAPI.logout();
     navigate("/auth");
   };
 
@@ -71,7 +87,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           <div>
             <SidebarLink
               link={{
-                label: "John Doe",
+                label: userName,
                 href: "#",
                 icon: (
                   <div className="h-7 w-7 flex-shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
@@ -80,6 +96,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 ),
               }}
             />
+            {userEmail && open && (
+              <p className="text-xs text-gray-400 px-2 mt-1 truncate">{userEmail}</p>
+            )}
             <button
               onClick={handleLogout}
               className="flex items-center justify-start gap-2 group/sidebar py-2 px-2 rounded-lg hover:bg-gray-900 transition-colors w-full mt-2"

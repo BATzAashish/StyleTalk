@@ -1,0 +1,273 @@
+/**
+ * StyleTalk Extension - Content Script Styles
+ * Injected into all web pages
+ */
+
+/* ==================== FLOATING BUTTON ==================== */
+
+.styletalk-floating-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  cursor: pointer;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.styletalk-floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.styletalk-floating-btn:active {
+  transform: scale(0.95);
+}
+
+.styletalk-floating-btn svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* ==================== QUICK ACTION BUTTON ==================== */
+
+.styletalk-quick-action {
+  position: absolute;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  cursor: pointer;
+  z-index: 999998;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.styletalk-quick-action:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.styletalk-quick-action:active {
+  transform: translateY(0);
+}
+
+/* ==================== OVERLAY IFRAME ==================== */
+
+.styletalk-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  height: 80%;
+  max-height: 600px;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  z-index: 2147483647; /* Maximum z-index */
+  background: white;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ==================== HIGHLIGHTED TEXT (For instant rewrite feature) ==================== */
+
+.styletalk-highlight {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.2) 0%, 
+    rgba(118, 75, 162, 0.2) 100%
+  );
+  border-bottom: 2px solid #667eea;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.styletalk-highlight:hover {
+  background: linear-gradient(90deg, 
+    rgba(102, 126, 234, 0.3) 0%, 
+    rgba(118, 75, 162, 0.3) 100%
+  );
+}
+
+/* Tooltip for highlighted text */
+.styletalk-highlight::after {
+  content: '✨ Click to enhance';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 999999;
+}
+
+.styletalk-highlight:hover::after {
+  opacity: 1;
+}
+
+/* ==================== LOADING INDICATOR ==================== */
+
+.styletalk-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(102, 126, 234, 0.3);
+  border-radius: 50%;
+  border-top-color: #667eea;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+
+.styletalk-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: white;
+  color: #333;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  animation: slideInUp 0.3s ease;
+  max-width: 300px;
+}
+
+.styletalk-toast.success {
+  border-left: 4px solid #10b981;
+}
+
+.styletalk-toast.error {
+  border-left: 4px solid #ef4444;
+}
+
+.styletalk-toast.info {
+  border-left: 4px solid #3b82f6;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .styletalk-overlay {
+    width: 95%;
+    height: 85%;
+    max-height: none;
+  }
+  
+  .styletalk-floating-btn {
+    width: 48px;
+    height: 48px;
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .styletalk-floating-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ==================== DARK MODE SUPPORT ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .styletalk-quick-action {
+    background: #1a1a1a;
+    color: #667eea;
+    border-color: #667eea;
+  }
+  
+  .styletalk-quick-action:hover {
+    background: #667eea;
+    color: white;
+  }
+  
+  .styletalk-toast {
+    background: #1a1a1a;
+    color: #e5e5e5;
+  }
+}
+
+/* ==================== PREVENT CONFLICTS ==================== */
+
+/* Ensure our elements don't inherit unwanted styles from the page */
+.styletalk-floating-btn,
+.styletalk-quick-action,
+.styletalk-overlay,
+.styletalk-toast {
+  all: initial;
+  /* Then re-apply our styles */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Re-apply specific styles after reset */
+.styletalk-floating-btn {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  width: 56px !important;
+  height: 56px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+  cursor: pointer !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+  color: white !important;
+}

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StyleTalk Extension Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border-left: 4px solid #fff;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .status.pending {
+            background: #ffc107;
+            color: #000;
+        }
+        .status.success {
+            background: #4caf50;
+            color: #fff;
+        }
+        .status.fail {
+            background: #f44336;
+            color: #fff;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .instructions ol {
+            margin-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+        }
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>✨ StyleTalk Extension Test Page</h1>
+    
+    <div class="card">
+        <h2>Quick Tests</h2>
+        
+        <div class="test-item">
+            <strong>1. Floating Button Test</strong>
+            <span class="status pending" id="status1">Check</span>
+            <p>Look in the <strong>bottom-right corner</strong> of this page. Do you see a purple ✨ button?</p>
+            <button onclick="updateStatus('status1', document.querySelector('#styletalk-floating-button') ? 'success' : 'fail')">Test</button>
+        </div>
+        
+        <div class="test-item">
+            <strong>2. Click Button Test</strong>
+            <span class="status pending" id="status2">Pending</span>
+            <p>Click the purple ✨ button. Does an overlay appear?</p>
+            <p><em>Mark result after clicking the button:</em></p>
+            <button onclick="updateStatus('status2', 'success')">✅ Overlay Appeared</button>
+            <button onclick="updateStatus('status2', 'fail')">❌ Nothing Happened</button>
+        </div>
+        
+        <div class="test-item">
+            <strong>3. Keyboard Shortcut Test</strong>
+            <span class="status pending" id="status3">Pending</span>
+            <p>Press <code>Ctrl+Shift+T</code>. Does the overlay toggle?</p>
+            <button onclick="updateStatus('status3', 'success')">✅ Works</button>
+            <button onclick="updateStatus('status3', 'fail')">❌ Doesn't Work</button>
+        </div>
+        
+        <div class="test-item">
+            <strong>4. Text Input Test</strong>
+            <span class="status pending" id="status4">Pending</span>
+            <p>Type or select text in the box below, then right-click:</p>
+            <textarea id="testText" placeholder="Type something like: hey how are you doing"></textarea>
+            <p>Do you see a <strong>"StyleTalk"</strong> option in the context menu?</p>
+            <button onclick="updateStatus('status4', 'success')">✅ Yes</button>
+            <button onclick="updateStatus('status4', 'fail')">❌ No</button>
+        </div>
+    </div>
+    
+    <div class="card instructions">
+        <h2>📋 Debugging Steps</h2>
+        <ol>
+            <li>Press <code>F12</code> to open Developer Tools</li>
+            <li>Go to the <strong>Console</strong> tab</li>
+            <li>Look for messages starting with <code>[StyleTalk]</code></li>
+            <li>If you see errors (red text), copy them</li>
+            <li>Click the purple ✨ button and watch for new messages</li>
+        </ol>
+    </div>
+    
+    <div class="card">
+        <h2>🔧 Console Commands</h2>
+        <p>Copy and paste these into the Console (F12) one by one:</p>
+        
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin: 10px 0;">
+            <code style="display: block; margin: 5px 0;">// Check if button exists</code>
+            <code style="display: block; margin: 5px 0;">document.querySelector('#styletalk-floating-button')</code>
+        </div>
+        
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin: 10px 0;">
+            <code style="display: block; margin: 5px 0;">// Check if overlay exists</code>
+            <code style="display: block; margin: 5px 0;">document.querySelector('#styletalk-overlay')</code>
+        </div>
+        
+        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin: 10px 0;">
+            <code style="display: block; margin: 5px 0;">// Manually trigger overlay</code>
+            <code style="display: block; margin: 5px 0;">if (typeof toggleOverlay === 'function') toggleOverlay();</code>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>✅ Services Status</h2>
+        <div id="servicesStatus">
+            <p>Checking backend and frontend...</p>
+            <button onclick="checkServices()">Check Services</button>
+        </div>
+    </div>
+    
+    <script>
+        function updateStatus(id, result) {
+            const element = document.getElementById(id);
+            element.className = 'status ' + result;
+            element.textContent = result === 'success' ? '✅ Pass' : '❌ Fail';
+        }
+        
+        async function checkServices() {
+            const statusDiv = document.getElementById('servicesStatus');
+            statusDiv.innerHTML = '<p>Checking...</p>';
+            
+            let backendStatus = '❌ Not Running';
+            let frontendStatus = '❌ Not Running';
+            
+            // Check backend
+            try {
+                const response = await fetch('http://localhost:5000/health');
+                if (response.ok) {
+                    backendStatus = '✅ Running on port 5000';
+                }
+            } catch (e) {
+                backendStatus = '❌ Not running (port 5000)';
+            }
+            
+            // Check frontend
+            try {
+                const response = await fetch('http://localhost:8080/');
+                frontendStatus = '✅ Running on port 8080';
+            } catch (e) {
+                try {
+                    const response = await fetch('http://localhost:8081/');
+                    frontendStatus = '✅ Running on port 8081';
+                } catch (e2) {
+                    frontendStatus = '❌ Not running (ports 8080/8081)';
+                }
+            }
+            
+            statusDiv.innerHTML = `
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
+                    <p><strong>Backend:</strong> ${backendStatus}</p>
+                    <p><strong>Frontend:</strong> ${frontendStatus}</p>
+                </div>
+                <button onclick="checkServices()" style="margin-top: 10px;">Recheck</button>
+            `;
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkServices, 1000);
+            
+            // Auto-check floating button
+            setTimeout(() => {
+                const button = document.querySelector('#styletalk-floating-button');
+                if (button) {
+                    updateStatus('status1', 'success');
+                }
+            }, 2000);
+        });
+        
+        console.log('[Test Page] StyleTalk test page loaded');
+        console.log('[Test Page] Open DevTools (F12) to see console messages');
+        console.log('[Test Page] Click the purple ✨ button when it appears');
+    </script>
+</body>
+</html>

@@ -1,18 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Globe, AlertCircle, Languages } from "lucide-react";
+import { Sparkles, Globe, AlertCircle, Languages, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import InputSection from "@/components/dashboard/InputSection";
 import ResponseCard from "@/components/dashboard/ResponseCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { textAPI } from "@/lib/api";
+import { searchGifsByTone, TenorGif } from "@/lib/tenor";
 
 interface ProcessedResult {
   type: string;
   content: string;
   color: string;
   emojis?: string[];
+  gifs?: TenorGif[];
+  cached?: boolean;
+  cacheHitCount?: number;
 }
 
 interface CulturalNote {
@@ -26,12 +31,43 @@ const TextProcessing = () => {
   const [results, setResults] = useState<ProcessedResult[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [culturalNote, setCulturalNote] = useState<CulturalNote | null>(null);
+  const [currentResultIndex, setCurrentResultIndex] = useState(0);
   
   // Feature toggles
   const [grammarCorrection, setGrammarCorrection] = useState(true);
   const [rephrasing, setRephrasing] = useState(true);
   const [translation, setTranslation] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("es");
+
+  // Navigation handlers
+  const handlePreviousResult = () => {
+    setCurrentResultIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+  };
+
+  const handleNextResult = () => {
+    setCurrentResultIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (results.length <= 1) return;
+      
+      if (e.key === "ArrowLeft") {
+        handlePreviousResult();
+      } else if (e.key === "ArrowRight") {
+        handleNextResult();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [results.length]);
+
+  // Reset current index when results change
+  useEffect(() => {
+    setCurrentResultIndex(0);
+  }, [results]);
 
   const getCulturalNotes = (lang: string): CulturalNote => {
     const notes: Record<string, CulturalNote> = {
@@ -139,6 +175,21 @@ const TextProcessing = () => {
     return processedResults;
   };
 
+  // Helper function to get color for tone/style
+  const getColorForStyle = (style: string): string => {
+    const colorMap: Record<string, string> = {
+      grammar: "bg-blue-100 text-blue-900 border-blue-200",
+      professional: "bg-indigo-100 text-indigo-900 border-indigo-200",
+      formal: "bg-indigo-100 text-indigo-900 border-indigo-200",
+      casual: "bg-green-100 text-green-900 border-green-200",
+      genz: "bg-pink-100 text-pink-900 border-pink-200",
+      concise: "bg-purple-100 text-purple-900 border-purple-200",
+      detailed: "bg-orange-100 text-orange-900 border-orange-200",
+      translation: "bg-pink-100 text-pink-900 border-pink-200",
+    };
+    return colorMap[style] || "bg-gray-100 text-gray-900 border-gray-200";
+  };
+
   const handleProcess = async () => {
     if (!input.trim()) {
       toast.error("Please enter text to process");
@@ -153,13 +204,167 @@ const TextProcessing = () => {
     setIsProcessing(true);
     setCulturalNote(null); // Reset cultural note
     
-    // Simulate API call
-    setTimeout(() => {
-      const newResults = mockProcess();
-      setResults(newResults);
+    try {
+      const processedResults: ProcessedResult[] = [];
+
+      // Use the new textAPI for rewriting
+      if (rephrasing) {
+        toast.info("✨ Generating AI-powered style variations...");
+        
+        const tones = ["formal", "casual", "genz", "concise", "detailed"];
+        
+        try {
+          const result = await textAPI.rewriteMultiple({
+            text: input,
+            tones: tones,
+            use_cache: true
+          });
+
+          if (result.success) {
+            result.variations.forEach(variation => {
+              const label = 
+                variation.tone === "formal" ? "Formal Style" :
+                variation.tone === "casual" ? "Casual Style" :
+                variation.tone === "genz" ? "Gen-Z Style" :
+                variation.tone === "concise" ? "Concise Version" : "Expanded Version";
+              
+              const emojis = 
+                variation.tone === "formal" ? ["👔", "💼"] :
+                variation.tone === "casual" ? ["😊", "👍"] :
+                variation.tone === "genz" ? ["💯", "🔥", "✨"] :
+                variation.tone === "concise" ? ["⚡", "🎯"] : ["📚", "📖"];
+
+              processedResults.push({
+                type: label,
+                content: variation.rewritten,
+                color: getColorForStyle(variation.tone),
+                emojis: emojis,
+                cached: variation.cached,
+                cacheHitCount: variation.cache_hit_count
+              });
+            });
+
+            if (result.variations.some(v => v.cached)) {
+              toast.success("⚡ Some results loaded from cache!");
+            }
+          }
+        } catch (error) {
+          console.error("AI rewrite failed:", error);
+          toast.error("Failed to generate variations");
+        }
+      }
+
+      // Grammar Correction (using single tone rewrite)
+      if (grammarCorrection) {
+        toast.info("📝 Correcting grammar with AI...");
+        
+        try {
+          const result = await textAPI.rewrite({
+            text: input,
+            tone: "neutral",
+            use_cache: true
+          });
+
+          if (result.success) {
+            processedResults.unshift({ // Add at beginning
+              type: "Grammar & Spelling Corrected",
+              content: result.rewritten,
+              color: getColorForStyle("grammar"),
+              emojis: ["✅", "�", "✏️"],
+              cached: result.cached,
+              cacheHitCount: result.cache_hit_count
+            });
+
+            if (result.cached) {
+              toast.success("⚡ Grammar correction loaded from cache!");
+            }
+          }
+        } catch (error) {
+          console.error("Grammar correction failed:", error);
+          // Fallback to basic correction
+          processedResults.unshift({
+            type: "Grammar Corrected (Basic)",
+            content: input.replace(/\bi\b/g, "I").replace(/\bu\b/g, "you").replace(/\bur\b/g, "your"),
+            color: getColorForStyle("grammar"),
+            emojis: ["✅", "📝"]
+          });
+        }
+      }
+
+      // Translation (still using mock for now - can be replaced with translation API)
+      if (translation) {
+        const translations: Record<string, string> = {
+          es: "Aquí está tu mensaje traducido al español. Este es un ejemplo de traducción cultural y lingüísticamente apropiada.",
+          fr: "Voici votre message traduit en français. Ceci est un exemple de traduction culturellement et linguistiquement appropriée.",
+          de: "Hier ist Ihre Nachricht auf Deutsch übersetzt. Dies ist ein Beispiel für eine kulturell und sprachlich angemessene Übersetzung.",
+          it: "Ecco il tuo messaggio tradotto in italiano. Questo è un esempio di traduzione culturalmente e linguisticamente appropriata.",
+          pt: "Aqui está sua mensagem traduzida para português. Este é um exemplo de tradução cultural e linguisticamente apropriada.",
+          ja: "これはあなたのメッセージの日本語訳です。これは文化的および言語的に適切な翻訳の例です。",
+          ko: "한국어로 번역된 메시지입니다. 이것은 문화적 및 언어적으로 적절한 번역의 예입니다.",
+          zh: "这是你的消息翻译成中文。这是文化和语言上适当翻译的例子。",
+        };
+        
+        processedResults.push({
+          type: `Translated (${targetLanguage.toUpperCase()})`,
+          content: translations[targetLanguage] || "Translation coming soon",
+          color: getColorForStyle("translation"),
+          emojis: ["🌍", "🗣️", "💬"]
+        });
+        
+        // Set cultural note
+        setCulturalNote(getCulturalNotes(targetLanguage));
+      }
+
+      if (processedResults.length === 0) {
+        toast.error("No results generated. Please try again.");
+        // Fallback to mock data
+        const mockResults = mockProcess();
+        setResults(mockResults);
+      } else {
+        // Fetch GIFs for each result based on tone
+        toast.info("🎬 Loading GIF suggestions...");
+        
+        const resultsWithGifs = await Promise.all(
+          processedResults.map(async (result) => {
+            try {
+              // Extract tone from result type
+              let tone = 'casual';
+              if (result.type.includes('Formal')) tone = 'formal';
+              else if (result.type.includes('Casual')) tone = 'casual';
+              else if (result.type.includes('Gen-Z')) tone = 'genz';
+              else if (result.type.includes('Concise')) tone = 'concise';
+              else if (result.type.includes('Expanded') || result.type.includes('Detailed')) tone = 'detailed';
+              else if (result.type.includes('Grammar')) tone = 'grammar';
+              else if (result.type.includes('Translated')) tone = 'translation';
+              
+              console.log(`[GIF] Fetching GIFs for type: "${result.type}" → tone: "${tone}"`);
+              const gifs = await searchGifsByTone(tone, 5);
+              console.log(`[GIF] Fetched ${gifs.length} GIFs for tone: "${tone}"`);
+              return { ...result, gifs };
+            } catch (error) {
+              console.error('Error fetching GIFs for result:', error);
+              return result;
+            }
+          })
+        );
+        
+        setResults(resultsWithGifs);
+        
+        const totalGifs = resultsWithGifs.reduce((sum, r) => sum + (r.gifs?.length || 0), 0);
+        console.log(`[GIF] Total GIFs fetched: ${totalGifs}`);
+        toast.success(`✨ Generated ${processedResults.length} variations with ${totalGifs} GIF suggestions!`);
+      }
+      
+    } catch (error) {
+      console.error("Error processing text:", error);
+      toast.error("Processing failed. Using fallback processing.");
+      
+      // Fallback to mock data on error
+      const mockResults = mockProcess();
+      setResults(mockResults);
+    } finally {
       setIsProcessing(false);
-      toast.success("Text processed successfully with cultural awareness!");
-    }, 1500);
+    }
   };
 
   return (
@@ -262,23 +467,74 @@ const TextProcessing = () => {
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Processed Results</h2>
-                  <Badge variant="secondary">
-                    {results.length} version{results.length !== 1 ? 's' : ''}
-                  </Badge>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">Processed Results</h2>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="bg-purple-900/50 text-purple-300">
+                      {currentResultIndex + 1} / {results.length}
+                    </Badge>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handlePreviousResult}
+                        className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+                        disabled={results.length <= 1}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleNextResult}
+                        className="bg-gray-800 border-gray-700 hover:bg-gray-700 text-white"
+                        disabled={results.length <= 1}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
                 
-                {results.map((result, index) => (
-                  <ResponseCard
-                    key={index}
-                    title={result.type}
-                    content={result.content}
-                    color={result.color}
-                    index={index}
-                    emojis={result.emojis}
-                  />
-                ))}
+                {/* Single Result Card with Navigation */}
+                <ResponseCard
+                  key={currentResultIndex}
+                  title={results[currentResultIndex].type}
+                  content={results[currentResultIndex].content}
+                  color={results[currentResultIndex].color}
+                  index={currentResultIndex}
+                  emojis={results[currentResultIndex].emojis}
+                  gifs={results[currentResultIndex].gifs}
+                  cached={results[currentResultIndex].cached}
+                  cacheHitCount={results[currentResultIndex].cacheHitCount}
+                />
+
+                {/* Quick Navigation Dots */}
+                <div className="flex justify-center gap-2 mt-4">
+                  {results.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentResultIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentResultIndex
+                          ? "bg-purple-500 w-8"
+                          : "bg-gray-600 hover:bg-gray-500"
+                      }`}
+                      aria-label={`Go to result ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                {/* View All Button */}
+                <Button
+                  variant="outline"
+                  className="w-full bg-gray-800 border-gray-700 hover:bg-gray-700 text-white mt-4"
+                  onClick={() => {
+                    toast.info(`Showing all ${results.length} variations`);
+                  }}
+                >
+                  View All {results.length} Variations
+                </Button>
               </>
             )}
           </div>

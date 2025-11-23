@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleTalk</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <span class="icon">✨</span>
+        <h1>StyleTalk</h1>
+      </div>
+      <div class="version">v1.0.0</div>
+    </div>
+
+    <!-- Auth Section -->
+    <div id="authSection" class="section">
+      <div class="auth-prompt">
+        <p>Sign in to sync your preferences and history across devices</p>
+        <button id="loginBtn" class="btn btn-primary">Sign In</button>
+        <button id="registerBtn" class="btn btn-secondary">Create Account</button>
+      </div>
+    </div>
+
+    <!-- User Section (hidden by default) -->
+    <div id="userSection" class="section" style="display: none;">
+      <div class="user-info">
+        <div class="avatar">👤</div>
+        <div class="user-details">
+          <div id="userName" class="user-name">Loading...</div>
+          <div id="userEmail" class="user-email">Loading...</div>
+        </div>
+      </div>
+      <button id="logoutBtn" class="btn btn-text">Sign Out</button>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="section">
+      <h2>Today's Activity</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="todayRequests">0</div>
+          <div class="stat-label">Enhancements</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="cacheHits">0</div>
+          <div class="stat-label">Cache Hits</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section">
+      <h2>Quick Actions</h2>
+      <div class="action-list">
+        <button class="action-item" id="openAssistant">
+          <span class="action-icon">🚀</span>
+          <div class="action-content">
+            <div class="action-title">Open Assistant</div>
+            <div class="action-desc">Ctrl+Shift+T</div>
+          </div>
+        </button>
+        <button class="action-item" id="viewHistory">
+          <span class="action-icon">📜</span>
+          <div class="action-content">
+            <div class="action-title">View History</div>
+            <div class="action-desc">Recent enhancements</div>
+          </div>
+        </button>
+        <button class="action-item" id="openPreferences">
+          <span class="action-icon">⚙️</span>
+          <div class="action-content">
+            <div class="action-title">Preferences</div>
+            <div class="action-desc">Customize settings</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Settings -->
+    <div class="section">
+      <h2>Quick Settings</h2>
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">Enable Emojis</div>
+            <div class="setting-desc">Add emojis to suggestions</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="enableEmojis" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">Enable GIFs</div>
+            <div class="setting-desc">Show GIF suggestions</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="enableGifs" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-label">Grammar Check</div>
+            <div class="setting-desc">Auto-correct grammar</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="grammarCheck" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="#" id="webAppLink" target="_blank">Open Web App</a>
+      <span>•</span>
+      <a href="#" id="helpLink">Help</a>
+      <span>•</span>
+      <a href="#" id="feedbackLink">Feedback</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
